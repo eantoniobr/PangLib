@@ -11,47 +11,42 @@ namespace PangLib.DAT
     public class DATFile
     {
         public List<string> Entries = new List<string>();
-        public string FilePath;
 
-        private BinaryReader Reader;
-        private byte[] FileDataBytes;
+        private string FilePath;
         private Encoding FileEncoding;
 
         /// <summary>
         /// Constructs a new DATFile instance
         /// </summary>
-        /// <param name="filePath">The file path of the DAT file</param>
-        public DATFile(string filePath)
-        {
-            FileDataBytes = File.ReadAllBytes(filePath);
-            FilePath = filePath;
-            FileEncoding = GetEncodingFromFileName();
-
-            Reader = new BinaryReader(new MemoryStream(FileDataBytes), FileEncoding);
-        }
+        public DATFile() { }
 
         /// <summary>
         /// Parses the data from the DAT file
         /// </summary>
-        public void Parse()
+        private void Parse()
         {
-            List<char> stringChars = new List<char>();
+            byte[] fileDataBytes = File.ReadAllBytes(FilePath);
 
-            while (Reader.BaseStream.Position < Reader.BaseStream.Length)
+            using (BinaryReader reader = new BinaryReader(new MemoryStream(fileDataBytes), FileEncoding))
             {
-                if (Reader.PeekChar() != 0x00)
-                {
-                    stringChars.Add(Reader.ReadChar());
-                }
-                else
-                {
-                    char[] chars = stringChars.ToArray();
-                    byte[] bytes = FileEncoding.GetBytes(chars);
+                List<char> stringChars = new List<char>();
 
-                    Entries.Add(FileEncoding.GetString(bytes));
+                while (reader.BaseStream.Position < reader.BaseStream.Length)
+                {
+                    if (reader.PeekChar() != 0x00)
+                    {
+                        stringChars.Add(reader.ReadChar());
+                    }
+                    else
+                    {
+                        char[] chars = stringChars.ToArray();
+                        byte[] bytes = FileEncoding.GetBytes(chars);
 
-                    Reader.BaseStream.Seek(1L, SeekOrigin.Current);
-                    stringChars = new List<char>();
+                        Entries.Add(FileEncoding.GetString(bytes));
+
+                        reader.BaseStream.Seek(1L, SeekOrigin.Current);
+                        stringChars = new List<char>();
+                    }
                 }
             }
         }
@@ -65,6 +60,11 @@ namespace PangLib.DAT
         /// <returns>Encoding of the DAT file</returns>
         private Encoding GetEncodingFromFileName()
         {
+            if (FilePath == null)
+            {
+                throw new InvalidOperationException("No file path given to get encoding from, use SetEncoding() method!");
+            }
+
             string fileName = Path.GetFileNameWithoutExtension(FilePath).ToLower();
 
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
@@ -109,6 +109,46 @@ namespace PangLib.DAT
         public void SetEncoding(Encoding encoding)
         {
             FileEncoding = encoding;
+        }
+
+        /// <summary>
+        /// Sets the file path of the DATFile instance
+        /// </summary>
+        /// <param name="filePath">File path to set</param>
+        public void SetFilePath(string filePath)
+        {
+            FilePath = filePath;
+        }
+
+        /// <summary>
+        /// Load a DAT file into a DATFile instance
+        /// </summary>
+        /// <param name="filePath">File path to load the DAT file from</param>
+        public static DATFile Load(string filePath)
+        {
+            DATFile DAT = new DATFile();
+
+            DAT.SetFilePath(filePath);
+            DAT.SetEncoding(DAT.GetEncodingFromFileName());
+            DAT.Parse();
+
+            return DAT;
+        }
+
+        /// <summary>
+        /// Save a DATFile instance to a file
+        /// </summary>
+        /// <param name="filePath">File path to save the DAT file to</param>
+        public void Save(string filePath)
+        {
+            using (BinaryWriter writer = new BinaryWriter(File.Open(filePath, FileMode.Create, FileAccess.Write), FileEncoding))
+            {
+                foreach (string entry in Entries)
+                {
+                    writer.Write(entry.ToCharArray());
+                    writer.Write((byte)0);
+                }
+            }
         }
     }
 }
