@@ -1,10 +1,10 @@
 namespace PangLib.PET.DataModels
 {
-    class Motion
+    public class Motion
     {
         public string Name;
-        public uint MotionStart;
-        public uint MotionEnd;
+        public uint FrameStart;
+        public uint FrameEnd;
         public string TargetName;
         public string TypeName;
         public uint Type;

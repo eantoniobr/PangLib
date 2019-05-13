@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
@@ -22,8 +21,8 @@ namespace PangLib.PET.Helpers
 
                 motion.Name = Encoding.UTF8.GetString(sectionReader.ReadBytes(nameLength));
 
-                motion.MotionStart = sectionReader.ReadUInt32();
-                motion.MotionEnd = sectionReader.ReadUInt32();
+                motion.FrameStart = sectionReader.ReadUInt32();
+                motion.FrameEnd = sectionReader.ReadUInt32();
 
                 int targetNameLength = sectionReader.ReadInt32();
 
