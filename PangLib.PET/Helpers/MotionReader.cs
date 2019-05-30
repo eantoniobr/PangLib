@@ -1,15 +1,23 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using PangLib.PET.DataModels;
+using PangLib.PET.Models;
 
 namespace PangLib.PET.Helpers
 {
+    /// <summary>
+    /// Helper class to read <see cref="PangLib.PET.Models.Motion"/> structures from Puppet files
+    /// </summary>
     static class MotionReader
     {
+        /// <summary>
+        /// Helper method to read all motions from a Puppet file and return a list of them
+        /// </summary>
+        /// <param name="sectionReader">BinaryReader instance containing the Motion section data</param>
+        /// <returns>List of motions from the Puppet file</returns>
         public static List<Motion> ReadAllMotions(BinaryReader sectionReader)
         {
-            List<Motion> Motions = new List<Motion>();
+            List<Motion> motions = new List<Motion>();
 
             uint motionCount = sectionReader.ReadUInt32();
 
@@ -38,10 +46,10 @@ namespace PangLib.PET.Helpers
 
                 motion.BoneName = Encoding.UTF8.GetString(sectionReader.ReadBytes(boneNameLength));
 
-                Motions.Add(motion);
+                motions.Add(motion);
             }
 
-            return Motions;
+            return motions;
         }
     }
 }

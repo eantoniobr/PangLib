@@ -1,11 +1,20 @@
 using System.Collections.Generic;
 using System.IO;
-using PangLib.PET.DataModels;
+using PangLib.PET.Models;
 
 namespace PangLib.PET.Helpers
 {
-    public class AnimationReader
+    /// <summary>
+    /// Helper class to read <see cref="PangLib.PET.Models.Animation"/> structures from Puppet files
+    /// </summary>
+    static class AnimationReader
     {
+        /// <summary>
+        /// Helper method to read all animations from a Puppet file and return a list of them
+        /// </summary>
+        /// <param name="sectionReader">BinaryReader instance containing the Animation section data</param>
+        /// <param name="version">Version of the Puppet file</param>
+        /// <returns>List of animations from the Puppet file</returns>
         public static List<Animation> ReadAllAnimations(BinaryReader sectionReader, Version version)
         {
             List<Animation> Animations = new List<Animation>();
@@ -20,20 +29,22 @@ namespace PangLib.PET.Helpers
                     break;
 
                 uint positionDataCount = sectionReader.ReadUInt32();
+                animation.PositionData = new PositionData[positionDataCount];
 
                 for (int i = 0; i < positionDataCount; i++)
                 {
-                    PositionData positionData = new PositionData() {
+                    PositionData positionData = new PositionData {
                         Time = sectionReader.ReadSingle(),
                         X = sectionReader.ReadSingle(),
                         Y = sectionReader.ReadSingle(),
                         Z = sectionReader.ReadSingle(),
                     };
 
-                    animation.PositionData.Add(positionData);
+                    animation.PositionData[i] = positionData;
                 }
 
                 uint rotationDataCount = sectionReader.ReadUInt32();
+                animation.RotationData = new RotationData[rotationDataCount];
 
                 if (version.Minor == 0)
                 {
@@ -47,7 +58,7 @@ namespace PangLib.PET.Helpers
 
                     if (version.Minor >= 2)
                     {
-                        rotationData = new RotationData() {
+                        rotationData = new RotationData {
                             Time = sectionReader.ReadSingle(),
                             X = sectionReader.ReadSingle(),
                             Y = sectionReader.ReadSingle(),
@@ -56,7 +67,7 @@ namespace PangLib.PET.Helpers
                         };
                     }
                     else {
-                        rotationData = new RotationData() {
+                        rotationData = new RotationData {
                             X = sectionReader.ReadSingle(),
                             Y = sectionReader.ReadSingle(),
                             Z = sectionReader.ReadSingle(),
@@ -64,38 +75,41 @@ namespace PangLib.PET.Helpers
                             Time = sectionReader.ReadSingle()
                         };
                     }
-                    animation.RotationData.Add(rotationData);
+                    
+                    animation.RotationData[i] = rotationData;
                 }
 
                 if (version.Minor >= 2)
                 {
                     uint scalingDataCount = sectionReader.ReadUInt32();
+                    animation.ScalingData = new ScalingData[scalingDataCount];
 
                     for (int i = 0; i < scalingDataCount; i++)
                     {
-                        ScalingData scalingData = new ScalingData() {
+                        ScalingData scalingData = new ScalingData {
                             Time = sectionReader.ReadSingle(),
                             X = sectionReader.ReadSingle(),
                             Y = sectionReader.ReadSingle(),
                             Z = sectionReader.ReadSingle()
                         };
 
-                        animation.ScalingData.Add(scalingData);
+                        animation.ScalingData[i] = scalingData;
                     }
                 }
 
                 if (version.Minor >= 3)
                 {
                     uint animationFlagCount = sectionReader.ReadUInt32();
+                    animation.AnimationFlags = new AnimationFlag[animationFlagCount];
 
                     for (int i = 0; i < animationFlagCount; i++)
                     {
-                        AnimationFlag animationFlag = new AnimationFlag() {
+                        AnimationFlag animationFlag = new AnimationFlag {
                             Time = sectionReader.ReadSingle(),
                             Value = sectionReader.ReadSingle()
                         };
 
-                        animation.AnimationFlags.Add(animationFlag);
+                        animation.AnimationFlags[i] = animationFlag;
                     }
                 }
 
