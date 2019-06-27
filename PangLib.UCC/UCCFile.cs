@@ -1,7 +1,6 @@
-﻿using System;
-using System.Drawing;
-using System.IO;
+﻿using System.IO;
 using System.IO.Compression;
+using SkiaSharp;
 
 namespace PangLib.UCC
 {
@@ -10,15 +9,18 @@ namespace PangLib.UCC
     /// </summary>
     public class UCCFile
     {
+        /// <summary>
+        /// ZIPArchive instance for the UCC file containing the self-design parts
+        /// </summary>
         private ZipArchive ZIPFile;
 
         /// <summary>
         /// Constructor for UCC file instance
         /// </summary>
-        /// <param name="filePath">Path of the UCC file</param>
-        public UCCFile(string filePath)
+        /// <param name="data">Stream containing the UCC file data</param>
+        public UCCFile(Stream data)
         {
-            ZIPFile = ZipFile.Open(filePath, ZipArchiveMode.Read);
+            ZIPFile = new ZipArchive(data);
         }
         
         /// <summary>
@@ -26,7 +28,7 @@ namespace PangLib.UCC
         /// </summary>
         /// <param name="entryName">Name of the entry</param>
         /// <returns>Bitmap instance of the specified entry</returns>
-        public Bitmap GetBitmapFromFileEntry(string entryName)
+        public SKBitmap GetBitmapFromFileEntry(string entryName)
         {
             int width;
             int height;
@@ -36,7 +38,7 @@ namespace PangLib.UCC
             ZipArchiveEntry entry = ZIPFile.GetEntry(entryName);
 
             MemoryStream memoryStream = new MemoryStream();
-            entry.Open().CopyTo(memoryStream);
+            entry?.Open().CopyTo(memoryStream);
             memoryStream.Position = 0;
 
             if (memoryStream.Length > 65536)
@@ -60,7 +62,7 @@ namespace PangLib.UCC
                 height = 128;
             }
 
-            Bitmap bitmap = new Bitmap(width, height);
+            SKBitmap bitmap = new SKBitmap(width, height);
 
             using (BinaryReader reader = new BinaryReader(memoryStream))
             {
@@ -73,29 +75,23 @@ namespace PangLib.UCC
                         loopCount = 4;
                     }
 
-                    int[] hexColor = new int[4];
+                    byte[] hexColor = new byte[4];
 
-                    for (int i = 0; i < loopCount; i++)
+                    for (byte i = 0; i < loopCount; i++)
                     {
                         hexColor[i] = reader.ReadByte();
-
-                        if (hexColor[i] < 0)
-                        {
-                            hexColor[i] = 0;
-                        }
-                        else if (hexColor[i] > 255)
-                        {
-                            hexColor[i] = 255;
-                        }
                     }
 
-                    Color color = Color.FromArgb(entryName == "icon" ? hexColor[3] : 255, hexColor[2], hexColor[1], hexColor[0]);
+                    SKColor color = new SKColor(hexColor[2], hexColor[1], hexColor[0], entryName == "icon" ? hexColor[3] : (byte) 255);
 
                     bitmap.SetPixel(posX, posY, color);
 
                     posX++;
 
-                    if (posX != width) continue;
+                    if (posX != width)
+                    {
+                        continue;
+                    }
                     
                     posY++;
                     posX = 0;
@@ -106,5 +102,3 @@ namespace PangLib.UCC
         }
     }
 }
-
-

@@ -1,5 +1,8 @@
 # PangLib.UCC
 
+| [![Nuget](https://img.shields.io/nuget/v/PangLib.UCC.svg)](https://www.nuget.org/packages/PangLib.UCC/) | [![Nuget](https://img.shields.io/nuget/dt/PangLib.UCC.svg)](https://www.nuget.org/packages/PangLib.UCC/) | [Issues](https://github.com/pangyatools/PangLib/labels/PangLib.UCC) |
+| ------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
+
 Library to handle Pangya self-design files.
 
 ## Installation
@@ -13,19 +16,27 @@ dotnet add package PangLib.UCC
 ## Usage
 
 ```cs
+using System.IO;
+using SkiaSharp;
+
 // Load UCC file into instance
-UCCFile UCC = new UCCFile("./selfdesign.jpg");
+UCCFile UCC = new UCCFile(File.Open("./selfdesign.jpg", FileMode.Open));
 
 // UCC files are zip archives and using this
 // method you can turn any file entry inside
-// the file into a Bitmap, which you then can
+// the file into a SKBitmap, which you then can
 // use further, or just save to disk
-Bitmap frontImage = UCC.GetBitmapFromFileEntry("front");
-frontImage.Save("./front.png", ImageFormat.Png);
+SKBitmap iconImage = UCC.GetBitmapFromFileEntry("icon");
+SaveImage(iconImage, "icon.png");
+
+static void SaveImage(SKBitmap bitmap, string filename)
+{
+    using (var image = SKImage.FromBitmap(bitmap))
+    using (var data = image.Encode(SKEncodedImageFormat.Png, 100)) {
+        // save the data to a stream
+        using (var stream = File.OpenWrite(filename)) {
+            data.SaveTo(stream);
+        }
+    }
+}
 ```
-
-## Known Issues
-
-- You can't save custom images to UCC files
-- You can't save UCC files back to disk
-- You can't create an empty UCC file instance to fill with own images

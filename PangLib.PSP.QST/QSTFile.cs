@@ -10,27 +10,27 @@ namespace PangLib.PSP.QST
     /// </summary>
     public class QSTFile
     {
-        public List<QSTDialogue> Entries = new List<QSTDialogue>();
-
-        private string FilePath;
+        /// <summary>
+        /// List of all dialogue entries of the QST file
+        /// </summary>
+        public List<QSTDialogue> Entries { get; } = new List<QSTDialogue>();
 
         /// <summary>
         /// Constructor for QST file instance
         /// </summary>
-        /// <param name="filePath">file path of the QST file</param>
-        public QSTFile (string filePath)
+        /// <param name="data">Stream containing the QST file data</param>
+        public QSTFile (Stream data)
         {
-            FilePath = filePath;
-
-            Parse();
+            Parse(data);
         }
 
         /// <summary>
         /// Parses the contents of the QST file
         /// </summary>
-        private void Parse ()
+        /// <param name="data">Stream containing the QST file data</param>
+        private void Parse (Stream data)
         {
-            using (BinaryReader reader = new BinaryReader(new MemoryStream(File.ReadAllBytes(FilePath))))
+            using (BinaryReader reader = new BinaryReader(data))
             {
                 int dialogueCount = (int) reader.ReadByte();
 
@@ -56,14 +56,49 @@ namespace PangLib.PSP.QST
         }
     }
 
-    public struct QSTDialogue 
+    /// <summary>
+    /// Main QST file dialogue structure
+    /// </summary>
+    public struct QSTDialogue : IEquatable<QSTDialogue>
     {
-        public byte EventID;
-        public byte ID;
-        public byte CharacterID;
-        public byte Position;
-        public string CharacterImage;
-        public string BackgroundImage;
-        public string Text;
+        /// <summary>
+        /// ID of the occuring event
+        /// </summary>
+        public byte EventID { get; set; }
+        
+        /// <summary>
+        /// Dialogue index/ID
+        /// </summary>
+        public byte ID { get; set; }
+        
+        /// <summary>
+        /// ID of the character currently speaking
+        /// </summary>
+        public byte CharacterID { get; set; }
+        
+        /// <summary>
+        /// Position of the current character
+        /// </summary>
+        public byte Position { get; set; }
+        
+        /// <summary>
+        /// Portrait of the current character
+        /// </summary>
+        public string CharacterImage { get; set; }
+        
+        /// <summary>
+        /// Current background image
+        /// </summary>
+        public string BackgroundImage { get; set; }
+        
+        /// <summary>
+        /// Text of the current dialogue
+        /// </summary>
+        public string Text { get; set; }
+
+        public bool Equals(QSTDialogue other)
+        {
+            return EventID == other.EventID && ID == other.ID;
+        }
     }
 }
